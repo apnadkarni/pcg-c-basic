@@ -28,8 +28,12 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+/* Visual C++ prior to Visual Studio 2010 do not have stdint */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+#include "ms_stdint.h"
+#else
 #include <stdint.h>
-#include <stdbool.h>
+#endif
 #include <time.h>
 #include <string.h>
 
@@ -37,27 +41,29 @@
 
 int main(int argc, char** argv)
 {
-    // Read command-line options
-
+    static const char number[] = {'A', '2', '3', '4', '5', '6', '7',
+                                  '8', '9', 'T', 'J', 'Q', 'K'};
+    static const char suit[] = {'h', 'c', 'd', 's'};
     int rounds = 5;
-    bool nondeterministic_seed = false;
+    int nondeterministic_seed = 0;
     int round, i;
+    // In this version of the code, we'll use a local rng, rather than the
+    // global one.
+    pcg32_random_t rng;
+    enum { SUITS = 4, NUMBERS = 13, CARDS = 52 };
 
+
+    // Read command-line options
     ++argv;
     --argc;
     if (argc > 0 && strcmp(argv[0], "-r") == 0) {
-        nondeterministic_seed = true;
+        nondeterministic_seed = 1;
         ++argv;
         --argc;
     }
     if (argc > 0) {
         rounds = atoi(argv[0]);
     }
-
-    // In this version of the code, we'll use a local rng, rather than the
-    // global one.
-
-    pcg32_random_t rng;
 
     // You should *always* seed the RNG.  The usual time to do it is the
     // point in time when you create RNG (typically at the beginning of the
@@ -91,6 +97,8 @@ int main(int argc, char** argv)
            sizeof(pcg32_random_t));
 
     for (round = 1; round <= rounds; ++round) {
+        char cards[CARDS];
+        
         printf("Round %d:\n", round);
         /* Make some 32-bit numbers */
         printf("  32bit:");
@@ -112,9 +120,6 @@ int main(int argc, char** argv)
         printf("\n");
 
         /* Deal some cards */
-        enum { SUITS = 4, NUMBERS = 13, CARDS = 52 };
-        char cards[CARDS];
-
         for (i = 0; i < CARDS; ++i)
             cards[i] = i;
 
@@ -126,9 +131,6 @@ int main(int argc, char** argv)
         }
 
         printf("  Cards:");
-        static const char number[] = {'A', '2', '3', '4', '5', '6', '7',
-                                      '8', '9', 'T', 'J', 'Q', 'K'};
-        static const char suit[] = {'h', 'c', 'd', 's'};
         for (i = 0; i < CARDS; ++i) {
             printf(" %c%c", number[cards[i] / SUITS], suit[cards[i] % SUITS]);
             if ((i + 1) % 22 == 0)

@@ -28,8 +28,12 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+/* Visual C++ prior to Visual Studio 2010 do not have stdint */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+#include "ms_stdint.h"
+#else
 #include <stdint.h>
-#include <stdbool.h>
+#endif
 #include <time.h>
 #include <string.h>
 
@@ -37,16 +41,19 @@
 
 int main(int argc, char** argv)
 {
-    // Read command-line options
-
+    static const char number[] = {'A', '2', '3', '4', '5', '6', '7',
+                                  '8', '9', 'T', 'J', 'Q', 'K'};
+    static const char suit[] = {'h', 'c', 'd', 's'};
+    enum { SUITS = 4, NUMBERS = 13, CARDS = 52 };
     int rounds = 5;
-    bool nondeterministic_seed = false;
+    int nondeterministic_seed = 0;
     int round, i;
 
+    // Read command-line options
     ++argv;
     --argc;
     if (argc > 0 && strcmp(argv[0], "-r") == 0) {
-        nondeterministic_seed = true;
+        nondeterministic_seed = 1;
         ++argv;
         --argc;
     }
@@ -87,6 +94,8 @@ int main(int argc, char** argv)
            "\n");
 
     for (round = 1; round <= rounds; ++round) {
+        char cards[CARDS];
+
         printf("Round %d:\n", round);
         /* Make some 32-bit numbers */
         printf("  32bit:");
@@ -108,9 +117,6 @@ int main(int argc, char** argv)
         printf("\n");
 
         /* Deal some cards */
-        enum { SUITS = 4, NUMBERS = 13, CARDS = 52 };
-        char cards[CARDS];
-
         for (i = 0; i < CARDS; ++i)
             cards[i] = i;
 
@@ -122,9 +128,6 @@ int main(int argc, char** argv)
         }
 
         printf("  Cards:");
-        static const char number[] = {'A', '2', '3', '4', '5', '6', '7',
-                                      '8', '9', 'T', 'J', 'Q', 'K'};
-        static const char suit[] = {'h', 'c', 'd', 's'};
         for (i = 0; i < CARDS; ++i) {
             printf(" %c%c", number[cards[i] / SUITS], suit[cards[i] % SUITS]);
             if ((i + 1) % 22 == 0)

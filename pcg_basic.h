@@ -31,7 +31,12 @@
 #ifndef PCG_BASIC_H_INCLUDED
 #define PCG_BASIC_H_INCLUDED 1
 
+/* Visual C++ prior to Visual Studio 2010 do not have stdint */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+#include "ms_inttypes.h"
+#else
 #include <inttypes.h>
+#endif
 
 #if __cplusplus
 extern "C" {
@@ -46,7 +51,11 @@ typedef struct pcg_state_setseq_64 pcg32_random_t;
 
 // If you *must* statically initialize it, here's one.
 
-#define PCG32_INITIALIZER   { 0x853c49e6748fea9bULL, 0xda3e39cb94b95bdbULL }
+#if defined(_MSC_VER)
+# define PCG32_INITIALIZER   { 0x853c49e6748fea9bui64, 0xda3e39cb94b95bdbui64 }
+#else
+# define PCG32_INITIALIZER   { 0x853c49e6748fea9bULL, 0xda3e39cb94b95bdbULL }
+#endif
 
 // pcg32_srandom(initstate, initseq)
 // pcg32_srandom_r(rng, initstate, initseq):
